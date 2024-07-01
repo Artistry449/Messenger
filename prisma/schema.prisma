@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model Message {
+  id        String                  @id @default(auto()) @map("_id") @db.ObjectId
+  text      String                
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  sender    ChannelParticipant      @relation(fields: [senderId], references: [id])
+  senderId  String                  @map("senderId") @db.ObjectId
+  channel   Channel                 @relation(fields: [channelId], references: [id])
+  channelId String                  @map("channelId") @db.ObjectId
+}
+
+model Channel {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  messages     Message[]
+  participants ChannelParticipant[]
+}
+
+model ChannelParticipant {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  channel   Channel  @relation(fields: [channelId], references: [id])
+  channelId String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+  messages  Message[]
+}
+
+model User {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String    @unique
+  passwordHash String
+  channels     ChannelParticipant[]
+}
